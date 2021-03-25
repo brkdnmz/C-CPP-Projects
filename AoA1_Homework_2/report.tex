@@ -1,0 +1,215 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage{tgpagella} %FONT
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{courier} %for monospace font
+\usepackage{caption}
+\usepackage{soul} %for underline \ul
+\usepackage{csquotes}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{breakcites}
+\usepackage{indentfirst}
+\usepackage{pgfgantt}
+\usepackage{pdflscape}
+\usepackage{float}
+\usepackage{epsfig}
+\usepackage{epstopdf}
+\usepackage[cmex10]{amsmath}
+\usepackage{bm}
+\usepackage{stfloats}
+\usepackage{multirow}
+\usepackage{diagbox}
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks   = true, %Colours links instead of ugly boxes
+  urlcolor     = blue, %Colour for external hyperlinks
+  linkcolor    = blue, %Colour of internal links
+  citecolor   = red %Colour of citations
+}
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset{
+    language=C++,
+    basicstyle=\ttfamily,
+    keywordstyle=\color{blue}\ttfamily,
+    stringstyle=\color{red}\ttfamily,
+    commentstyle=\color{magenta}\ttfamily,
+    morecomment=[l][\color{magenta}]{\#},
+    numbers=left,
+    numberstyle=\tiny,
+    frame = single,
+    framexleftmargin=15pt,
+    breaklines
+}
+\linespread{1.3}
+\title{
+    \begin{figure}[H]
+        \centering
+        \caption*{\textit{Image taken from \href{https://brewminate.com/on-vagueness-or-when-is-a-heap-of-sand-not-a-heap-of-sand/}{Brewminate}}}
+        \includegraphics[width=\textwidth]{heap.jpg}
+        \label{fig:heap}
+    \end{figure}
+    \textbf{\Huge BLG 335E\\Homework 2 Report\\\textit{\textcolor{gray}{Priority Queue (Heap)}}}
+}
+\author{\textbf{Berke Dönmez}\\
+        \textbf{150170045}}
+\date{\textbf{\today}}
+\begin{document}
+\begin{titlepage}
+    \centering
+    \maketitle
+    \thispagestyle{empty}
+\end{titlepage}
+\section{Implementation and Running Time}
+Firstly, I implemented a \textbf{Min Heap} (a heap where every non-root node has parent with a smaller or equal value). My Min Heap uses the \textbf{STL \texttt{vector<double>}} as its main data structure because the storage should be dynamic since there are insertions (adding a new taxi) and deletions (calling a taxi).
+
+\noindent The heap has two attributes: \texttt{vector<double> taxis} and \texttt{int \_size} (number of nodes). Initially, I inserted 0 to \texttt{taxis} in order to handle with 1-based indexing.
+
+\noindent There are 5 operations the heap can handle:
+\begin{lstlisting}
+double getMin() const
+void heapifyUP(int startIndex)
+void insert(const double newTaxi)
+void removeMin()
+void update(int index)
+\end{lstlisting}
+In addition, I implemented some helper functions: \texttt{getLeftChild(i), getRightChild(i), getParent(i)}. Their names are self-explanatory. They return \texttt{2*i, 2*i+1, i/2}, respectively.
+\subsection{\texttt{getMin}}
+\noindent It returns the minimum distance (value of root of the Min Heap):
+\begin{lstlisting}
+double getMin() const{
+    return taxis[1];
+}
+\end{lstlisting}
+Since it only accesses an element of a \texttt{vector} (i.e. array), it runs in $\mathcal{O}(1)$.
+\newpage
+\subsection{\texttt{heapifyUP(startIndex)}}
+\noindent It is called whenever something is changed in Min Heap. When a node's value gets smaller than its parent, it should be ascended in order to keep the heap healthy.
+\begin{lstlisting}
+void heapifyUP(int startIndex){
+    int& index = startIndex;
+    int parent = getParent(index);
+    while(parent >= 1 && taxis[index] < taxis[parent]){
+        swap(taxis[index], taxis[parent]);
+        index = parent;
+        parent = getParent(index);
+    }
+}
+\end{lstlisting}
+First two lines run in $\mathcal{O}(1)$, while loop is repeated at most $log_2(parent)$ times (because parent is divided by 2 each time) and operations inside the loop run in $\mathcal{O}(1)$. In total, this function runs in $2*\mathcal{O}(1) + log_2(parent) * 3 * \mathcal{O}(1) = \mathcal{O}(log_2(parent))$ time. The worst case takes place when initial value of $parent$ is maximized: $parent = \left \lfloor \frac{SIZE}{2} \right \rfloor$ where $SIZE$ is the number of nodes in the heap. Therefore, the worst case time complexity is $\mathcal{O}(log(SIZE))$.
+\subsection{\texttt{insert(newTaxi)}}
+It is called when a new taxi is added to heap.
+\begin{lstlisting}
+void insert(const double newTaxi){
+    taxis.push_back(newTaxi);
+    _size++; //size of the heap
+    int curIndex = _size;
+    heapifyUP(curIndex);
+}
+\end{lstlisting}
+First three lines run in $\mathcal{O}(1)$ (the time complexity of push back operation is linear when resizing happens but we may not consider this special case) and last line runs in $\mathcal{O}(log(SIZE))$. In total, insertion is done in $\mathcal{O}(log(SIZE))$.
+\newpage
+\subsection{\texttt{removeMin}}
+\noindent It is called when a taxi is called. It removes the root of the heap (nearest taxi) and re-heapifies the heap.
+\begin{lstlisting}
+void removeMin(){
+    if(_size == 0) return;
+    swap(taxis[1], taxis[_size]);
+    taxis.pop_back();
+    _size--;
+    if(_size == 0) return;
+    int index = 1;
+    while(true){
+        int leftChild = getLeftChild(index);
+        int rightChild = getRightChild(index);
+        double leftChildVal = leftChild <= _size ?
+        taxis[leftChild] : INF;
+        double rightChildVal = rightChild <= _size ? 
+        taxis[rightChild] : INF;
+        int minChild = -1;
+        if(leftChildVal >= taxis[index] 
+           && rightChildVal >= taxis[index]){
+            break; 
+        }
+        if(leftChildVal < rightChildVal){
+            minChild = leftChild;
+        }else{
+            minChild = rightChild;
+        }
+        swap(taxis[index], taxis[minChild]); 
+        index = minChild;
+    }
+}
+\end{lstlisting}
+Firstly, the root and the last node are swapped in order to pop the minimum value. Then, the heap should be heapified because the root is changed. While the value of the minimum valued child is smaller than the current node (initially root), current node should be swapped with this child. Loop is ended when there is not any child (node is a leaf) or the minimum valued child is bigger than or equal to the node.
+
+\noindent The determinant of time complexity is the while loop because all operations run in $\mathcal{O}(1)$ (pop back has a special case similor to push back but generally, it runs in constant time). This loop is very similar to the \texttt{heapifyUP} function. The only difference is that it heapifies \textbf{down}. Therefore, removal is also done in $\mathcal{O}(log(SIZE))$ with a little bigger constant factor.
+\subsection{\texttt{update(index)}}
+\noindent It is called whenever a random taxi's distance is decreased.
+\begin{lstlisting}
+void update(int index){
+    if(_size == 0) return;
+    taxis[index] -= 0.01;
+    if(taxis[index] < 0) taxis[index] = 0;
+    heapifyUP(index);
+}
+\end{lstlisting}
+Firstly, value of the randomly selected node is decreased by $0.01$ and when it gets below zero, it gets back to zero. Since there is a possibility that the node's value becomes smaller than its ancestors' values, heap is heapified starting from the current node. Update is done in $\mathcal{O}(log(SIZE))$ because of the heapify.
+
+\subsection{Simulation Phase}
+In every operation, I calculate the probability of the operation being an update or an addition by the following way: I get a random real number from the range $[0, 1]$. If it is smaller than $p$, the update probability, distance of a random taxi is updated. Else, a new taxi is called.
+\begin{lstlisting}
+double which = (double) myRand() / RAND_MAX;
+if(which <= p){
+    //update
+}else{
+    //call
+}
+\end{lstlisting}
+\newpage
+\noindent Update is done as follows: Pick a random integer between 1 and heap size, then call the update function with this integer (target index).
+\begin{lstlisting}
+int size = heap.size();
+if(size == 0) continue;
+int randomTaxi = myRand() % size + 1;
+heap.update(randomTaxi);
+update++; //total number of updates
+\end{lstlisting}
+Addition is done by reading the location of new taxi from the file, calculating its distance from the hotel and inserting this distance to the heap.
+\begin{lstlisting}
+double longitude, latitude;
+file >> longitude >> latitude;
+double dist = distance(longitude, latitude);
+heap.insert(dist);
+addition++; //total number of additions
+\end{lstlisting}
+Lastly, if a new taxi is called (removal), root's value in heap is added to a vector \texttt{calledTaxis} and \texttt{removeMin()} function is called. Below, \texttt{i} keeps the operation order.
+\begin{lstlisting}
+if(i % 100 == 0){
+    if(heap.size() == 0) continue;
+    calledTaxis.push_back(heap.getMin());
+    heap.removeMin();
+}
+\end{lstlisting}
+All operations are done in $\mathcal{O}(log(SIZE))$ since in every operation, a logarithmic-timed function of heap is called.
+
+In total, program runs theoretically in $\mathcal{O}(m*log(m))$ where $m$ is the number of operations. It is actually not the tightest upper bound because it is assumed that before every operation, the size of the heap is $m$ and every function works in the worst case. In detail, we can say that runtime is $\mathcal{O}(log(s_1)) + \mathcal{O}(log(s_2)) + \mathcal{O}(log(s_3)) + ... + \mathcal{O}(log(s_m))$ where $s_i$ is the size of heap before the $i$-th operation. Also, the runtime depends on $p$ because addition increases the size while update does not affect the size. When $p$ gets bigger, runtime gets smaller as the number of updates is expected to get bigger and the number of addition is expected to get smaller. Similarly when $p$ gets smaller, runtime gets bigger.
+\newpage
+\section{Runtimes for different \textbf{m} \textbf{(p = 0.2)}}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{graph1.png}
+    \caption{Runtimes for $m \in [10^3, 10^5]$}
+    \label{fig:graph1}
+\end{figure}
+I have run the program 5 times (taking the average runtime) for each multiple of 25 between $[10^3, 10^5]$ i.e. 1025, 1050, 1075... and got the graph above, using Excel. I believe that since the runtime depends on many factors (the computer being imperfect, $p$, order of taxis in the file etc.), the graph is not that perfect. The theoretical runtime was $\mathcal{O}(m*log(m))$ but the graph is close to being linear. Here, I want to say that it is a \enquote{nice} $\mathcal{O}(m*log(m))$.
+\newpage
+\section{Runtimes for different \textbf{p} \textbf{(m = $\mathbf{10^5}$)}}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{graph2.png}
+    \caption{Runtimes for $p \in [0, 1]$}
+    \label{fig:graph2}
+\end{figure}
+\end{document}

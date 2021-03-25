@@ -1,0 +1,46 @@
+Berke Dönmez
+150170045
+
+1)
+Let's denote some necessary properties as:
+Minimum degree of a node = t
+Number of keys in the tree before insertion = n
+
+Every node has 3 different children bonds and three different parent bonds (x bonds, y bonds, z bonds).
+A bond serves which attribute it corresponds to.
+Thus, we can imagine that our new tree consists of 3 different phases/stages. (3 trees with different bonds are combined in one tree)
+In every phase, a different attribute is considered as key.
+Therefore, we should construct the bonds for the new key (insertion) one by one since each attribute is independent from other attributes,
+meaning that each type of bond is independent from other bonds: each phase is independent from other phases.
+So, we should insert the key 3 times (inserting it in all 3 phases). Each insertion constructs different type of bonds.
+Actually, this insertion is as same as the original B-Tree insertion. The only difference is that it is called 3 times.
+Maximum height of the tree (h) is log_t(n) (1 + t + t^2 + ... + t^h = n).
+During the insertion, we search the proper child of the current node to traverse.
+This searching operation costs O(log(t)) or O(t) depending on the algorithm used (binary search / linear search).
+After we find the target node (the proper leaf node), we can insert the key with a cost of O(t) (assuming that node uses array/vector to store the keys, which should remain sorted).
+As a result, an insertion operation costs O(log(t) * log_t(n) + t).
+If binary search is used -> O(log(t) * log_t(n) + t)
+If linear search is used -> O(t * log_t(n) + t) = O(t * log_t(n))
+Three of it cost 3 times more expensive, which is a constant and can be excluded in big-O notation.
+
+2)
+MBT = Mini B-Tree (for convenience)
+Minimum degree of a node = t
+Number of MBTs in the tree before insertion = n
+(When searching key inside a node, linear search is assumed to be used instead of binary search.)
+(I assumed we have the information of which MBT we should add the new node to. For example, we may know the standard deviation of this MBT.)
+First operation is to find the target node in which our target MBT is present.
+If every MBT stores its own standard deviation of x's, then there is no need to recalculate the standard deviations. Thus, cost of accessing the standard deviation of an MBT is constant (O(1)).
+Similar to the first question, searching an MBT in a node costs O(t) or O(log(t)).
+Again, maximum height of the tree (h) is log_t(n). Therefore, search operations costs a total of O(t * log_t(n)) (assuming linear search is used).
+Now, the target MBT is found. It is time to insert the new key.
+Minimum degree of a node in MBT = t'
+Number of keys in the MBT before insertion = m
+Cost of inserting the key to the MBT is the same as inserting the key to a B-Tree (assuming linear search is used) -> O(t' * log_t'(m)).
+After the key is inserted, standard deviation of MBT is to be recalculated.
+First, the arithmetic mean of keys should be calculated in O(m). Then, standard deviation can be calculated in O(m) -> 2 * O(m) = O(m).
+Now since the standard deviation may have a different value, we should erase our MBT from the big tree and insert it again in order to move it to the new proper place.
+Both erase and insertion cost O(t * log_t(n)). Therefore, moving the MBT costs 2 * O(t * log_t(n)) = O(t * log_t(n)).
+Finally, sum of these costs is:
+O(t * log_t(n)) + O(t' * log_t'(m)) + O(m) + O(t * log_t(n))
+= O(t * log_t(n) + t' * log_t'(m) + m).
