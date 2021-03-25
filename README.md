@@ -1,6 +1,6 @@
 # C-CPP-Projects
 Most of the completed projects given in school
 
-Codeforces: https://codeforces.com/profile/brkdnmz
+[Codeforces Account](https://codeforces.com/profile/brkdnmz)
 
-binarysearch: https://binarysearch.com/@/brkdnmz
+[binarysearch Account](https://binarysearch.com/@/brkdnmz)
